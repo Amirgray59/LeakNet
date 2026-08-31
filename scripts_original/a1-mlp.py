@@ -1,0 +1,96 @@
+import pandas as pd
+import numpy as np
+import warnings
+from sklearn.model_selection import train_test_split, GridSearchCV
+from sklearn.preprocessing import StandardScaler
+from sklearn.neural_network import MLPRegressor
+from sklearn.metrics import mean_squared_error, r2_score
+from sklearn.exceptions import ConvergenceWarning
+import joblib
+import time
+
+warnings.filterwarnings("ignore", category=ConvergenceWarning)
+
+# --------------------------------------
+# Load Data
+# --------------------------------------
+print("Uploading excel data...")
+data = pd.read_excel('C:/PouRia/SUTECH/article2-uniformed/Udata_generation/a1-bench3-Udata-nd10.xlsx')
+start_time = time.time()
+
+# y = Lx, Ly, Lz, Emitter
+y = data.iloc[:, 0:4]
+
+# X = pressures
+X = data.iloc[:, 4:]
+
+# --------------------------------------
+# Normalize X
+# --------------------------------------
+scaler = StandardScaler()
+X_scaled = scaler.fit_transform(X)
+
+# --------------------------------------
+# Train/Test split
+# --------------------------------------
+X_train, X_test, y_train, y_test = train_test_split(
+    X_scaled, y, test_size=0.2, random_state=42
+)
+
+# --------------------------------------
+# MLP setup
+# --------------------------------------
+params = {
+    'hidden_layer_sizes': [(128,64)],
+    'activation': ['relu'],
+    'solver': ['adam'],
+    'alpha': [1e-4, 1e-3],
+    'learning_rate_init': [0.001, 0.005],
+    'max_iter': [500],
+    'early_stopping': [True]
+}
+
+target_names = ['Lx', 'Ly', 'Lz', 'Emitter']
+mlp_models = []
+
+# --------------------------------------
+# Train separate model for each output
+# --------------------------------------
+for i in range(y.shape[1]):
+    print(f"\n🔹 Training MLP for {target_names[i]}")
+
+    mlp = MLPRegressor(random_state=42)
+    grid = GridSearchCV(mlp, params, cv=5, scoring='r2')
+    grid.fit(X_train, y_train.iloc[:, i])
+
+    model = grid.best_estimator_
+    mlp_models.append(model)
+
+    # Predictions
+    pred_train = model.predict(X_train)
+    pred_test = model.predict(X_test)
+
+    # Metrics
+    mse_train = mean_squared_error(y_train.iloc[:, i], pred_train)
+    r2_train = r2_score(y_train.iloc[:, i], pred_train)
+
+    mse_test = mean_squared_error(y_test.iloc[:, i], pred_test)
+    r2_test = r2_score(y_test.iloc[:, i], pred_test)
+
+    print(f"Train → MSE: {mse_train:.6f} | R2: {r2_train:.6f}")
+    print(f"Test  → MSE: {mse_test:.6f} | R2: {r2_test:.6f}")
+
+# --------------------------------------
+# End time
+# --------------------------------------
+end_time = time.time()
+print(f"\n⏱ Execution time: {end_time - start_time:.2f} sec")
+
+# --------------------------------------
+# Save models & scaler
+# --------------------------------------
+for name, model in zip(target_names, mlp_models):
+    joblib.dump(model, f'mlp_model_{name}.pkl')
+
+joblib.dump(scaler, 'scaler_mlp.pkl')
+print("✅ MLP models and scaler saved.")

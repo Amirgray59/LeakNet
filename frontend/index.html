@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LeakNet | مکان‌یابی نشتی شبکه آب</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">
+    <span class="logo">💧</span>
+    <div>
+      <h1>LeakNet</h1>
+      <p>مکان‌یابی نشتی لوله‌های آب با یادگیری ماشین</p>
+    </div>
+  </div>
+  <div class="status" id="status">در حال اتصال…</div>
+</header>
+
+<main class="layout">
+  <!-- نقشه شبکه -->
+  <section class="map-card">
+    <div class="map-toolbar">
+      <h2>شماتیک شبکه (۳۲ گره / ۳۴ لوله)</h2>
+      <div class="legend">
+        <span><i class="dot node"></i> گره / سنسور</span>
+        <span><i class="dot leak"></i> نشتی</span>
+        <span><i class="dot rsv"></i> مخزن (۱۰۰m)</span>
+      </div>
+    </div>
+    <div class="map-wrap" id="mapWrap">
+      <svg id="netmap" viewBox="0 0 1060 1000" preserveAspectRatio="xMidYMid meet"></svg>
+    </div>
+  </section>
+
+  <!-- پنل کنترل -->
+  <aside class="panel">
+    <div class="card">
+      <h3>۱) فشار سنسورها</h3>
+      <div class="row-btns">
+        <button id="btnSample" class="btn ghost">🎲 نمونه از داده واقعی</button>
+        <button id="btnFill" class="btn ghost">↩️ مقدار پیش‌فرض</button>
+      </div>
+      <div class="sensors" id="sensors"></div>
+    </div>
+
+    <div class="card">
+      <h3>۲) مدل پیش‌بینی</h3>
+      <select id="modelSel" class="select">
+        <option value="all">همه مدل‌ها (مقایسه + Ensemble)</option>
+        <option value="rfr">Random Forest</option>
+        <option value="xgboost">XGBoost</option>
+        <option value="mlp">MLP</option>
+        <option value="svr">SVR</option>
+      </select>
+      <button id="btnPredict" class="btn primary">🔍 پیش‌بینی محل نشتی</button>
+    </div>
+
+    <div class="card">
+      <h3>۳) پیش‌بینی گروهی (فایل)</h3>
+      <input type="file" id="fileInput" accept=".xlsx,.xls,.csv" class="file">
+      <button id="btnBatch" class="btn ghost">📤 آپلود و پردازش</button>
+    </div>
+
+    <div class="card results" id="resultCard" hidden>
+      <h3>نتیجه</h3>
+      <div id="resultBody"></div>
+    </div>
+
+    <div class="card" id="metricsCard" hidden>
+      <h3>دقت مدل‌ها (R² تست)</h3>
+      <div id="metricsBody"></div>
+    </div>
+  </aside>
+</main>
+
+<footer class="foot">
+  <span>Backend: FastAPI · Frontend: SVG Map · Docker Ready</span>
+</footer>
+
+<script src="app.js"></script>
+</body>
+</html>

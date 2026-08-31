@@ -1,0 +1,15 @@
+services:
+  leaknet:
+    build: .
+    container_name: leaknet
+    ports:
+      - "8000:8000"
+    volumes:
+      # دیتاست‌ها (xlsx) اینجا قرار می‌گیرند
+      - ./data:/app/data
+      # مدل‌های آموزش‌دیده (pkl) اینجا ذخیره/خوانده می‌شوند
+      - ./models:/app/models
+    environment:
+      - DATA_DIR=/app/data
+      - MODELS_DIR=/app/models
+    restart: unless-stopped
