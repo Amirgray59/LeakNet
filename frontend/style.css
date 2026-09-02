@@ -20,10 +20,10 @@ body{
 .brand p{font-size:12px;color:var(--muted)}
 .status{font-size:12px;padding:6px 12px;border-radius:20px;border:1px solid var(--line);color:var(--muted)}
 .status.ok{color:var(--ok);border-color:var(--ok)}
-.status.demo{color:#fbbf24;border-color:#fbbf24}
+.status.err{color:#f87171;border-color:#f87171}
 
 .layout{
-  display:grid;grid-template-columns:1fr 360px;gap:18px;
+  display:grid;grid-template-columns:1fr 370px;gap:18px;
   padding:18px 26px;max-width:1500px;margin:auto;
 }
 @media(max-width:1000px){.layout{grid-template-columns:1fr}}
@@ -46,8 +46,9 @@ svg{width:100%;height:auto;display:block}
 
 .panel{display:flex;flex-direction:column;gap:14px}
 .card{padding:16px}
-.card h3{font-size:14px;color:var(--accent);margin-bottom:10px}
-.row-btns{display:flex;gap:8px;margin-bottom:10px}
+.card h3{font-size:14px;color:var(--accent);margin-bottom:8px}
+.hint{font-size:11px;color:var(--muted);margin-bottom:10px;line-height:1.7}
+.hint code{background:#0d1526;padding:1px 6px;border-radius:5px;color:var(--accent)}
 
 .btn{
   border:1px solid var(--line);background:var(--card2);color:var(--txt);
@@ -58,19 +59,19 @@ svg{width:100%;height:auto;display:block}
 .btn.primary{
   width:100%;margin-top:10px;padding:12px;font-size:14px;font-weight:bold;
   background:linear-gradient(135deg,var(--accent),var(--accent2));
-  border:none;color:#04121f;
+  border:none;color:#283643;
 }
-.btn.primary:hover{filter:brightness(1.15)}
-.btn.ghost{flex:1}
-.select{
-  width:100%;padding:10px;border-radius:10px;background:var(--card2);
-  color:var(--txt);border:1px solid var(--line);font-family:inherit;font-size:13px;
+.btn.primary:hover:not(:disabled){filter:brightness(1.15)}
+.btn.primary:disabled{opacity:.4;cursor:not-allowed;transform:none}
+.file{width:100%;font-size:12px;color:var(--muted);margin-bottom:4px}
+.upload-info{
+  margin-top:8px;font-size:11px;color:var(--ok);
+  background:#22c55e14;border:1px solid #22c55e44;border-radius:8px;padding:7px 10px;
 }
-.file{width:100%;font-size:12px;color:var(--muted);margin-bottom:10px}
 
 .sensors{
   display:grid;grid-template-columns:repeat(4,1fr);gap:6px;
-  max-height:260px;overflow:auto;padding-left:4px;
+  max-height:280px;overflow:auto;padding-left:4px;margin-bottom:4px;
 }
 .sensors::-webkit-scrollbar{width:6px}
 .sensors::-webkit-scrollbar-thumb{background:var(--line);border-radius:3px}
@@ -81,21 +82,22 @@ svg{width:100%;height:auto;display:block}
   background:#0d1526;color:var(--txt);font-size:12px;text-align:center;
 }
 .sensor input:focus{border-color:var(--accent);outline:none}
+.sensor input.filled{border-color:#22c55e66;background:#0f1a26}
 
 .results .kv{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
 .kv .item{background:#0d1526;border:1px solid var(--line);border-radius:10px;padding:10px;text-align:center}
 .kv .item b{display:block;font-size:18px;color:var(--accent);margin-top:4px}
 .kv .item span{font-size:11px;color:var(--muted)}
 .kv .item.leakval b{color:var(--leak)}
-table.cmp{width:100%;border-collapse:collapse;font-size:12px}
-table.cmp th,table.cmp td{padding:7px 6px;border-bottom:1px solid var(--line);text-align:center}
-table.cmp th{color:var(--accent);font-weight:normal}
-table.cmp tr:last-child td{border-bottom:none}
-.badge{display:inline-block;font-size:10px;padding:2px 8px;border-radius:12px;background:#fbbf2422;color:#fbbf24;border:1px solid #fbbf2455;margin-bottom:8px}
 .pipe-hit{
   background:#ef444418;border:1px solid #ef444466;color:#fca5a5;
   border-radius:10px;padding:8px 10px;font-size:12px;margin-bottom:10px;text-align:center;
 }
+.accuracy{
+  background:#22c55e14;border:1px solid #22c55e44;color:#86efac;
+  border-radius:10px;padding:8px 10px;font-size:11px;margin-top:10px;line-height:1.8;
+}
+.accuracy b{color:#4ade80}
 .foot{text-align:center;color:var(--muted);font-size:11px;padding:16px}
 
 /* --- نقشه --- */
@@ -107,10 +109,8 @@ table.cmp tr:last-child td{border-bottom:none}
 .node-circle.sensor:hover{fill:var(--accent)}
 .node-circle.reservoir{fill:var(--accent);stroke:#bae6fd}
 .node-label{fill:#0b1220;font-size:13px;font-weight:bold;text-anchor:middle;pointer-events:none}
-.node-label.out{fill:var(--txt)}
 .leak-marker{fill:var(--leak);stroke:#fff;stroke-width:2}
 .leak-pulse{fill:none;stroke:var(--leak);stroke-width:2;animation:pulse 1.6s infinite}
 @keyframes pulse{0%{r:8;opacity:1}100%{r:30;opacity:0}}
 .rsv-box{fill:none;stroke:var(--accent);stroke-width:2}
 .rsv-label{fill:var(--accent);font-size:14px;font-weight:bold}
-.map-title{fill:#5c6f96;font-size:12px}

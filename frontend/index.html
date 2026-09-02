@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>LeakNet | مکان‌یابی نشتی شبکه آب</title>
+<title> مکان‌یابی نشتی شبکه آب</title>
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -11,8 +11,8 @@
   <div class="brand">
     <span class="logo">💧</span>
     <div>
-      <h1>LeakNet</h1>
-      <p>مکان‌یابی نشتی لوله‌های آب با یادگیری ماشین</p>
+      <h1>نشتی اب</h1>
+      <p>مکان‌یابی نشتی با SVR</p>
     </div>
   </div>
   <div class="status" id="status">در حال اتصال…</div>
@@ -29,54 +29,40 @@
         <span><i class="dot rsv"></i> مخزن (۱۰۰m)</span>
       </div>
     </div>
-    <div class="map-wrap" id="mapWrap">
+    <div class="map-wrap">
       <svg id="netmap" viewBox="0 0 1060 1000" preserveAspectRatio="xMidYMid meet"></svg>
     </div>
   </section>
 
   <!-- پنل کنترل -->
   <aside class="panel">
+    <!-- ۱) آپلود فایل -->
     <div class="card">
-      <h3>۱) فشار سنسورها</h3>
-      <div class="row-btns">
-        <button id="btnSample" class="btn ghost">🎲 نمونه از داده واقعی</button>
-        <button id="btnFill" class="btn ghost">↩️ مقدار پیش‌فرض</button>
-      </div>
-      <div class="sensors" id="sensors"></div>
-    </div>
-
-    <div class="card">
-      <h3>۲) مدل پیش‌بینی</h3>
-      <select id="modelSel" class="select">
-        <option value="all">همه مدل‌ها (مقایسه + Ensemble)</option>
-        <option value="rfr">Random Forest</option>
-        <option value="xgboost">XGBoost</option>
-        <option value="mlp">MLP</option>
-        <option value="svr">SVR</option>
-      </select>
-      <button id="btnPredict" class="btn primary">🔍 پیش‌بینی محل نشتی</button>
-    </div>
-
-    <div class="card">
-      <h3>۳) پیش‌بینی گروهی (فایل)</h3>
+      <h3>۱) آپلود فایل فشار سنسورها</h3>
+      <p class="hint">فایل اکسل/CSV با ستون‌های <code>n1 … n31</code> — اگر چند سطر باشد، <b>سطر آخر</b> استفاده می‌شود.</p>
       <input type="file" id="fileInput" accept=".xlsx,.xls,.csv" class="file">
-      <button id="btnBatch" class="btn ghost">📤 آپلود و پردازش</button>
+      <button id="btnUpload" class="btn primary">📤 بارگذاری در پنل سنسورها</button>
+      <div id="uploadInfo" class="upload-info" hidden></div>
     </div>
 
+    <!-- ۲) مقادیر سنسورها -->
+    <div class="card">
+      <h3>۲) مقادیر سنسورها (n1 تا n31)</h3>
+      <p class="hint">خالی — فایل آپلود کنید یا دستی وارد کنید.</p>
+      <div class="sensors" id="sensors"></div>
+      <button id="btnPredict" class="btn primary" disabled>🔍 پیش‌بینی نشتی با SVR</button>
+    </div>
+
+    <!-- ۳) نتیجه (بعد از پیش‌بینی باز می‌شود) -->
     <div class="card results" id="resultCard" hidden>
-      <h3>نتیجه</h3>
+      <h3>📍 نتیجه تشخیص نشتی</h3>
       <div id="resultBody"></div>
-    </div>
-
-    <div class="card" id="metricsCard" hidden>
-      <h3>دقت مدل‌ها (R² تست)</h3>
-      <div id="metricsBody"></div>
     </div>
   </aside>
 </main>
 
 <footer class="foot">
-  <span>Backend: FastAPI · Frontend: SVG Map · Docker Ready</span>
+  <span>LeakNet · FastAPI + SVR · Docker</span>
 </footer>
 
 <script src="app.js"></script>

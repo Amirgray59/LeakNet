@@ -1,6 +1,7 @@
 """
 آموزش یکپارچه ۴ مدل (RFR / XGBoost / MLP / SVR) روی دیتاست اکسل
 خروجی: models/<algo>_model_{Lx,Ly,Lz,Emitter}.pkl + scaler + metadata.json + metrics.json
+
 مثال:
   python training/train_all.py --data data/a1-bench2-Udata-nd2.xlsx --models rfr,xgboost,mlp,svr
 """
