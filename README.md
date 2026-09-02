@@ -56,7 +56,7 @@ curl -X POST http://localhost:8000/api/models/reload
 pip install -r requirements.txt
 uvicorn backend.main:app --reload --port 8000
 # آموزش:
-python training/train_all.py --data data/your-dataset.xlsx --models rfr,xgboost
+python training/train_all.py --data data/your-dataset.xlsx --models rfr,xgboost,svr,rfr,mlp
 ```
 
 ## API
