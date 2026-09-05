@@ -1,14 +1,90 @@
-/* LeakNet frontend — ساده‌شده: فقط SVR */
+/* LeakNet Shiraz — Leaflet map + pipe network overlay */
 const $ = (s) => document.querySelector(s);
 const SVGNS = "http://www.w3.org/2000/svg";
 
 let NETWORK = null;
 let SENSOR_COLS = [];
 let MODEL_METRICS = {};
+let map = null;
+let mapVisible = true;
 
 const flipY = (y) => 1000 - y;
 
-/* ---------- رسم نقشه ---------- */
+/* ================= ناحیه پشتیبانی‌شده: مطهری شمالی، شیراز ================= */
+const SHIRAZ_CENTER = [29.62, 52.53];
+const MOTTAHARI_ZONE = [
+  [29.6455, 52.5240],
+  [29.6455, 52.5460],
+  [29.6320, 52.5460],
+  [29.6320, 52.5240],
+];
+
+/* ================= نقشه شیراز (Leaflet + OSM) ================= */
+function initMap() {
+  map = L.map("shirazMap", { zoomControl: true, attributionControl: true })
+    .setView(SHIRAZ_CENTER, 13);
+
+  L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+    maxZoom: 19,
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+  }).addTo(map);
+
+  // ناحیه زرد: مطهری شمالی
+  const zone = L.polygon(MOTTAHARI_ZONE, {
+    color: "#facc15", weight: 3, dashArray: "8 6",
+    fillColor: "#facc15", fillOpacity: 0.28,
+  }).addTo(map);
+
+  zone.bindTooltip(
+    `<div>💧 مطهری شمالی<small>شبکه آب پایش‌شده — برای ورود کلیک کنید</small></div>`,
+    { permanent: true, direction: "center", className: "zone-label" }
+  );
+
+  zone.on("mouseover", () => zone.setStyle({ fillOpacity: 0.45 }));
+  zone.on("mouseout", () => zone.setStyle({ fillOpacity: 0.28 }));
+  zone.on("click", () => enterZone(zone));
+}
+
+/* ================= ورود به ناحیه → نمایش شبکه ================= */
+function enterZone(zone) {
+  map.flyToBounds(zone.getBounds(), { duration: 1.4, padding: [40, 40] });
+  setTimeout(() => {
+    $("#shirazMap").classList.add("dimmed");     // نقشه کم‌رنگ در بک‌گراند
+    $("#networkOverlay").classList.remove("hidden");
+    $("#sidePanel").classList.remove("hidden");
+    $("#statusLine").textContent = "شبکه مطهری شمالی — آماده پایش";
+    if (!NETWORK) loadNetwork();
+  }, 1300);
+}
+
+function exitZone() {
+  $("#networkOverlay").classList.add("hidden");
+  $("#sidePanel").classList.add("hidden");
+  $("#shirazMap").classList.remove("dimmed");
+  $("#statusLine").textContent = "روی ناحیه زرد (مطهری شمالی) کلیک کنید";
+  map.flyTo(SHIRAZ_CENTER, 13, { duration: 1.2 });
+}
+
+$("#btnBack").addEventListener("click", exitZone);
+
+/* دکمه خاموش/روشن نقشه پس‌زمینه */
+$("#btnToggleMap").addEventListener("click", () => {
+  const m = $("#shirazMap"), b = $("#btnToggleMap");
+  if (mapVisible) {
+    m.classList.remove("dimmed");
+    m.classList.add("off");
+    b.textContent = "🗺 نقشه پس‌زمینه: خاموش";
+    b.classList.add("active");
+  } else {
+    m.classList.remove("off");
+    m.classList.add("dimmed");
+    b.textContent = "🗺 نقشه پس‌زمینه: روشن";
+    b.classList.remove("active");
+  }
+  mapVisible = !mapVisible;
+});
+
+/* ================= رسم شبکه (SVG) ================= */
 function el(tag, attrs = {}) {
   const e = document.createElementNS(SVGNS, tag);
   for (const [k, v] of Object.entries(attrs)) e.setAttribute(k, v);
@@ -67,17 +143,12 @@ function drawReservoir(svg, n) {
   svg.appendChild(tl);
 }
 
-/* ---------- نشتی روی نقشه ---------- */
-function clearLeaks() {
+/* ---------- نشتی ---------- */
+function showLeak(marker, pipeId) {
   const svg = $("#netmap");
   svg.querySelectorAll(".leak-marker,.leak-pulse").forEach((e) => e.remove());
   svg.querySelectorAll(".pipe-line.leaking").forEach((e) => e.classList.remove("leaking"));
-}
-
-function showLeak(marker, pipeId) {
-  clearLeaks();
   if (!marker) return;
-  const svg = $("#netmap");
   const y = flipY(marker.y);
   svg.appendChild(el("circle", { cx: marker.x, cy: y, r: 8, class: "leak-pulse" }));
   svg.appendChild(el("circle", { cx: marker.x, cy: y, r: 9, class: "leak-marker" }));
@@ -105,7 +176,12 @@ function fillSensors(values) {
       inp.classList.add("filled");
     }
   });
-  $("#btnPredict").disabled = !SENSOR_COLS.every((c) => $(`#in-${c}`).value !== "");
+  checkReady();
+}
+
+function checkReady() {
+  $("#btnPredict").disabled =
+    !SENSOR_COLS.length || !SENSOR_COLS.every((c) => $(`#in-${c}`).value.trim() !== "");
 }
 
 function readPressures() {
@@ -133,7 +209,7 @@ function setStatus(txt, cls) {
   s.className = `status ${cls || ""}`;
 }
 
-/* ---------- آپلود فایل ---------- */
+/* ---------- آپلود ---------- */
 $("#btnUpload").addEventListener("click", async () => {
   const f = $("#fileInput").files[0];
   if (!f) return setStatus("ابتدا فایل انتخاب کنید", "err");
@@ -145,22 +221,17 @@ $("#btnUpload").addEventListener("click", async () => {
     fillSensors(j.values);
     const info = $("#uploadInfo");
     info.hidden = false;
-    info.textContent = `✓ ${j.n_rows} سطر خوانده شد — سطر آخر در پنل سنسورها قرار گرفت (${j.columns.length} ستون)`;
-    setStatus("مقادیر سنسورها بارگذاری شد ✓", "ok");
-  } catch (e) {
-    setStatus("خطا: " + e.message, "err");
-  }
+    info.textContent = `✓ ${j.n_rows} سطر خوانده شد — سطر آخر در پنل قرار گرفت (${j.columns.length} ستون)`;
+    setStatus("مقادیر بارگذاری شد ✓", "ok");
+  } catch (e) { setStatus("خطا: " + e.message, "err"); }
 });
 
-/* فعال‌سازی دکمه پیش‌بینی وقتی همه سنسورها پر شدند */
-$("#sensors").addEventListener("input", () => {
-  $("#btnPredict").disabled = !SENSOR_COLS.every((c) => $(`#in-${c}`).value.trim() !== "");
-});
+$("#sensors").addEventListener("input", checkReady);
 
 /* ---------- پیش‌بینی ---------- */
 $("#btnPredict").addEventListener("click", async () => {
   try {
-    setStatus("در حال پیش‌بینی با SVR…");
+    setStatus("در حال پیش‌بینی با SVR");
     const data = await api("/api/predict", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -169,35 +240,28 @@ $("#btnPredict").addEventListener("click", async () => {
     renderResult(data);
     showLeak(data.leak_map.marker, data.leak_map.nearest_pipe);
     setStatus("نشتی شناسایی شد ✓", "ok");
-  } catch (e) {
-    setStatus("خطا: " + e.message, "err");
-  }
+  } catch (e) { setStatus("خطا: " + e.message, "err"); }
 });
 
 function renderResult(data) {
   const card = $("#resultCard");
   card.hidden = false;
   const p = data.prediction, lm = data.leak_map;
-
   let html = `<div class="pipe-hit">🔴 نشتی روی لوله ${lm.nearest_pipe}
     (بین گره ${lm.pipe_nodes[0]} و گره ${lm.pipe_nodes[1]})</div>`;
   html += `<div class="kv">
     <div class="item leakval"><span>Lx (m)</span><b>${p.Lx.toFixed(1)}</b></div>
     <div class="item leakval"><span>Ly (m)</span><b>${p.Ly.toFixed(1)}</b></div>
     <div class="item"><span>Lz / تراز (m)</span><b>${(p.Lz ?? 0).toFixed(2)}</b></div>
-    <div class="item"><span>شدت نشتی (Emitter)</span><b>${(p.Emitter ?? 0).toFixed(1)}</b></div>
+    <div class="item"><span>شدت نشتی</span><b>${(p.Emitter ?? 0).toFixed(1)}</b></div>
   </div>`;
-
-  // دقت مدل SVR
   const m = MODEL_METRICS;
   if (m && m.Lx) {
     const f = (t) => (m[t]?.r2_test ?? NaN);
     html += `<div class="accuracy">
       <b>📊 دقت مدل SVR (R² تست)</b><br>
-      Lx: <b>${f("Lx").toFixed(3)}</b> ·
-      Ly: <b>${f("Ly").toFixed(3)}</b> ·
-      Lz: <b>${f("Lz").toFixed(3)}</b> ·
-      Emitter: <b>${f("Emitter").toFixed(3)}</b>
+      Lx: <b>${f("Lx").toFixed(3)}</b> · Ly: <b>${f("Ly").toFixed(3)}</b> ·
+      Lz: <b>${f("Lz").toFixed(3)}</b> · Emitter: <b>${f("Emitter").toFixed(3)}</b>
     </div>`;
   }
   $("#resultBody").innerHTML = html;
@@ -205,17 +269,20 @@ function renderResult(data) {
 }
 
 /* ---------- شروع ---------- */
+async function loadNetwork() {
+  NETWORK = await api("/api/network");
+  SENSOR_COLS = NETWORK.sensor_columns;
+  drawMap();
+  buildSensorInputs();
+}
+
 (async function init() {
+  initMap();
   try {
-    NETWORK = await api("/api/network");
-    SENSOR_COLS = NETWORK.sensor_columns;
-    drawMap();
-    buildSensorInputs();           // خالی — منتظر ورودی کاربر
     const m = await api("/api/models");
     if (m.models.length && m.models[0].metrics) MODEL_METRICS = m.models[0].metrics;
-    setStatus(m.demo_mode ? "مدل SVR یافت نشد — ابتدا آموزش دهید" : "متصل ✓ (SVR فعال)",
-              m.demo_mode ? "err" : "ok");
+    setStatus(m.demo_mode ? "مدل یافت نشد" : "متصل ✓ (SVR)", m.demo_mode ? "err" : "ok");
   } catch (e) {
-    setStatus("خطا در اتصال به سرور: " + e.message, "err");
+    setStatus("خطا در اتصال به سرور", "err");
   }
 })();

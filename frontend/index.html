@@ -3,68 +3,69 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title> مکان‌یابی نشتی شبکه آب</title>
+<title>نشتی اب | مکان‌یابی نشتی شبکه آب شیراز</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+      integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
-<header class="topbar">
+
+<!-- لایه ۱: نقشه واقعی شیراز (Leaflet) -->
+<div id="shirazMap"></div>
+
+<!-- لایه ۲: معماری شبکه لوله‌ها (فورگراند — بعد از کلیک روی ناحیه) -->
+<div id="networkOverlay" class="hidden">
+  <div class="net-toolbar">
+    <div class="net-title">
+      <span>💧 شبکه آب مطهری شمالی</span>
+      <small>۳۲ گره / ۳۴ لوله — مدل SVR</small>
+    </div>
+    <div class="net-btns">
+      <button id="btnToggleMap" class="tbtn">🗺 🗺🗺نقشه پس‌زمینه: روشن</button>
+      <button id="btnBack" class="tbtn">→ بازگشت به نقشه</button>
+    </div>
+  </div>
+  <div class="net-canvas">
+    <svg id="netmap" viewBox="0 0 1060 1000" preserveAspectRatio="xMidYMid meet"></svg>
+  </div>
+</div>
+
+<!-- پنل‌های کنترل -->
+<aside class="panel hidden" id="sidePanel">
+  <div class="card">
+    <h3>۱) آپلود فایل فشار سنسورها</h3>
+    <p class="hint">اکسل/CSV با ستون‌های <code>n1 … n31</code> — <b>سطر آخر</b> استفاده می‌شود.</p>
+    <input type="file" id="fileInput" accept=".xlsx,.xls,.csv" class="file">
+    <button id="btnUpload" class="btn primary">📤 بارگذاری در پنل سنسورها</button>
+    <div id="uploadInfo" class="upload-info" hidden></div>
+  </div>
+
+  <div class="card">
+    <h3>۲) مقادیر سنسورها</h3>
+    <div class="sensors" id="sensors"></div>
+    <button id="btnPredict" class="btn primary" disabled>🔍 پیش‌بینی نشتی با SVR</button>
+  </div>
+
+  <div class="card results" id="resultCard" hidden>
+    <h3>📍 نتیجه تشخیص نشتی</h3>
+    <div id="resultBody"></div>
+  </div>
+</aside>
+
+<!-- هدر شناور -->
+<header class="topbar-float">
   <div class="brand">
     <span class="logo">💧</span>
     <div>
-      <h1>نشتی اب</h1>
-      <p>مکان‌یابی نشتی با SVR</p>
+      <h1>نشتی اب شیراز</h1>
+      <p id="statusLine">روی ناحیه زرد (مطهری شمالی) کلیک کنید</p>
     </div>
   </div>
   <div class="status" id="status">در حال اتصال…</div>
 </header>
 
-<main class="layout">
-  <!-- نقشه شبکه -->
-  <section class="map-card">
-    <div class="map-toolbar">
-      <h2>شماتیک شبکه (۳۲ گره / ۳۴ لوله)</h2>
-      <div class="legend">
-        <span><i class="dot node"></i> گره / سنسور</span>
-        <span><i class="dot leak"></i> نشتی</span>
-        <span><i class="dot rsv"></i> مخزن (۱۰۰m)</span>
-      </div>
-    </div>
-    <div class="map-wrap">
-      <svg id="netmap" viewBox="0 0 1060 1000" preserveAspectRatio="xMidYMid meet"></svg>
-    </div>
-  </section>
-
-  <!-- پنل کنترل -->
-  <aside class="panel">
-    <!-- ۱) آپلود فایل -->
-    <div class="card">
-      <h3>۱) آپلود فایل فشار سنسورها</h3>
-      <p class="hint">فایل اکسل/CSV با ستون‌های <code>n1 … n31</code> — اگر چند سطر باشد، <b>سطر آخر</b> استفاده می‌شود.</p>
-      <input type="file" id="fileInput" accept=".xlsx,.xls,.csv" class="file">
-      <button id="btnUpload" class="btn primary">📤 بارگذاری در پنل سنسورها</button>
-      <div id="uploadInfo" class="upload-info" hidden></div>
-    </div>
-
-    <!-- ۲) مقادیر سنسورها -->
-    <div class="card">
-      <h3>۲) مقادیر سنسورها (n1 تا n31)</h3>
-      <p class="hint">خالی — فایل آپلود کنید یا دستی وارد کنید.</p>
-      <div class="sensors" id="sensors"></div>
-      <button id="btnPredict" class="btn primary" disabled>🔍 پیش‌بینی نشتی با SVR</button>
-    </div>
-
-    <!-- ۳) نتیجه (بعد از پیش‌بینی باز می‌شود) -->
-    <div class="card results" id="resultCard" hidden>
-      <h3>📍 نتیجه تشخیص نشتی</h3>
-      <div id="resultBody"></div>
-    </div>
-  </aside>
-</main>
-
-<footer class="foot">
-  <span>LeakNet · FastAPI + SVR · Docker</span>
-</footer>
-
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 <script src="app.js"></script>
 </body>
 </html>

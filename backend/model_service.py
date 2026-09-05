@@ -19,28 +19,29 @@ _scaler = None
 _metadata = {}
 _metrics = {}
 
-MODEL = "svr"
+MODEL = "svr_model"
+
 
 def load_models():
     global _models, _scaler, _metadata, _metrics
     _models = {}
     for t in TARGETS:
-        p = os.path.join(MODELS_DIR, f"{MODEL}_model_{t}.pkl")
+        p = os.path.join(MODELS_DIR, f"{MODEL}_{t}.pkl")
         if os.path.exists(p):
             _models[t] = joblib.load(p)
-    sp = os.path.join(MODELS_DIR, f"scaler_{MODEL}.pkl")
+    sp = os.path.join(MODELS_DIR, "scaler_xgboost.pkl")
     _scaler = joblib.load(sp) if os.path.exists(sp) else None
 
     mp = os.path.join(MODELS_DIR, "metadata.json")
     _metadata = json.load(open(mp)) if os.path.exists(mp) else {}
     tp = os.path.join(MODELS_DIR, "metrics.json")
     all_m = json.load(open(tp)) if os.path.exists(tp) else {}
-    _metrics = all_m.get(f"{MODEL}", {}) if isinstance(all_m, dict) else {}
+    _metrics = all_m.get("svr", {}) if isinstance(all_m, dict) else {}
 
 
 def available_models():
     if len(_models) == len(TARGETS) and _scaler is not None:
-        return [{"id": f"{MODEL}", "name": f"{MODEL}",
+        return [{"id": "svr", "name": "SVR",
                  "n_features": int(getattr(_scaler, "n_features_in_", 0)),
                  "metrics": _metrics}]
     return []
@@ -57,10 +58,10 @@ def _features_from(payload, n_expected):
 
 
 def predict(algo, pressures):
-    if algo != MODEL:
-        raise ValueError(f"only {MODEL} is available")
+    if algo != "svr":
+        raise ValueError("only svr is available")
     if len(_models) != len(TARGETS) or _scaler is None:
-        raise ValueError(f"model not loaded — train {MODEL} first")
+        raise ValueError("model not loaded — train svr first")
     n = int(getattr(_scaler, "n_features_in_", 0))
     X = _features_from(pressures, n)
     if X.shape[1] != n:

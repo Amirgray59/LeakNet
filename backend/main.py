@@ -1,5 +1,5 @@
 """
-LeakNet API — FastAPI backend (ساده‌شده: فقطf {MODEL})
+LeakNet API — FastAPI backend (ساده‌شده: فقط svr)
 """
 import os
 import io
@@ -13,12 +13,10 @@ from fastapi.responses import JSONResponse
 from .network_topology import topology_payload, nearest_pipe, NODES
 from . import model_service as ms
 
-from .model_service import MODEL
-
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 FRONTEND_DIR = os.path.join(BASE_DIR, "frontend")
 
-app = FastAPI(title="LeakNet MODEL", version="2.0")
+app = FastAPI(title="leakwater — svr", version="2.0")
 
 app.add_middleware(
     CORSMiddleware, allow_origins=["*"],
@@ -30,7 +28,7 @@ ms.load_models()
 
 @app.get("/api/health")
 def health():
-    return {"status": "ok", "model_loaded": any(m.get("id") == f"{MODEL}" for m in ms.available_models())}
+    return {"status": "ok", "model_loaded": any(m.get("id") == "svr" for m in ms.available_models())}
 
 
 @app.get("/api/network")
@@ -52,17 +50,17 @@ def models():
 @app.post("/api/models/reload")
 def reload_models():
     ms.load_models()
-    return {"model_loaded": any(m.get("id") == f"{MODEL}" for m in ms.available_models())}
+    return {"model_loaded": any(m.get("id") == "svr" for m in ms.available_models())}
 
 
 @app.post("/api/predict")
 def predict(payload: dict = Body(...)):
-    """پیش‌بینی {MODEL}: {"pressures": {"n1":..,"n31":..}}"""
+    """پیش‌بینی با svr: {"pressures": {"n1":..,"n31":..}}"""
     pressures = payload.get("pressures")
     if pressures is None:
         return JSONResponse({"error": "pressures required"}, status_code=400)
     try:
-        result = ms.predict(f"{MODEL}", pressures)
+        result = ms.predict("svr", pressures)
     except ValueError as e:
         return JSONResponse({"error": str(e)}, status_code=400)
 

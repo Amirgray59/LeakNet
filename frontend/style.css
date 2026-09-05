@@ -2,51 +2,87 @@
   --bg:#0b1220; --card:#131c2e; --card2:#18223a; --line:#24304d;
   --txt:#e8eefc; --muted:#8fa0c2; --accent:#38bdf8; --accent2:#0ea5e9;
   --leak:#ef4444; --ok:#22c55e; --pipe:#3b4a6b; --node:#f8fafc;
+  --zone:#facc15;
 }
 *{box-sizing:border-box;margin:0;padding:0}
-body{
-  font-family:Tahoma,"Segoe UI",sans-serif;background:
-  radial-gradient(1200px 600px at 80% -10%,#16233f 0%,var(--bg) 55%);
-  color:var(--txt);min-height:100vh;
+body{font-family:Tahoma,"Segoe UI",sans-serif;background:var(--bg);color:var(--txt);overflow:hidden}
+
+/* ---------- لایه نقشه شیراز ---------- */
+#shirazMap{
+  position:fixed;inset:0;z-index:1;
+  transition:filter .6s ease, opacity .6s ease;
 }
-.topbar{
-  display:flex;justify-content:space-between;align-items:center;
-  padding:14px 26px;border-bottom:1px solid var(--line);
-  background:rgba(11,18,32,.85);position:sticky;top:0;z-index:10;backdrop-filter:blur(8px);
+#shirazMap.dimmed{filter:brightness(.22) saturate(.5) blur(1px)}
+#shirazMap.off{opacity:0;pointer-events:none}
+.leaflet-container{background:#0a1020;font-family:inherit}
+
+/* استایل ناحیه پشتیبانی‌شده */
+.zone-label{
+  background:rgba(11,18,32,.9);border:1.5px solid var(--zone);border-radius:10px;
+  color:var(--zone);font-weight:bold;font-size:13px;padding:5px 12px;
+  box-shadow:0 2px 12px #000a;white-space:nowrap;direction:rtl;
 }
-.brand{display:flex;gap:12px;align-items:center}
-.logo{font-size:34px;filter:drop-shadow(0 0 8px #38bdf880)}
-.brand h1{font-size:22px;letter-spacing:.5px}
-.brand p{font-size:12px;color:var(--muted)}
-.status{font-size:12px;padding:6px 12px;border-radius:20px;border:1px solid var(--line);color:var(--muted)}
+.zone-label small{display:block;font-weight:normal;font-size:10px;color:#fde68a}
+.leaflet-tooltip.zone-label:before{display:none}
+
+/* ---------- هدر شناور ---------- */
+.topbar-float{
+  position:fixed;top:14px;right:14px;z-index:1200;
+  display:flex;gap:14px;align-items:center;
+  background:rgba(13,20,38,.88);border:1px solid var(--line);border-radius:16px;
+  padding:10px 16px;backdrop-filter:blur(10px);box-shadow:0 8px 30px #0008;
+}
+.brand{display:flex;gap:10px;align-items:center}
+.logo{font-size:28px;filter:drop-shadow(0 0 8px #38bdf880)}
+.brand h1{font-size:17px}
+.brand p{font-size:11px;color:var(--muted)}
+.status{font-size:11px;padding:5px 12px;border-radius:16px;border:1px solid var(--line);color:var(--muted)}
 .status.ok{color:var(--ok);border-color:var(--ok)}
 .status.err{color:#f87171;border-color:#f87171}
 
-.layout{
-  display:grid;grid-template-columns:1fr 370px;gap:18px;
-  padding:18px 26px;max-width:1500px;margin:auto;
+/* ---------- لایه شبکه (فورگراند) ---------- */
+#networkOverlay{
+  position:fixed;inset:0;z-index:1000;
+  display:flex;flex-direction:column;
+  transition:opacity .5s ease;
 }
-@media(max-width:1000px){.layout{grid-template-columns:1fr}}
-
-.map-card,.card{
-  background:linear-gradient(180deg,var(--card),var(--card2));
-  border:1px solid var(--line);border-radius:16px;
-  box-shadow:0 8px 30px #0006;
+#networkOverlay.hidden{opacity:0;pointer-events:none}
+.net-toolbar{
+  display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;
+  padding:72px 22px 10px;
 }
-.map-card{padding:14px}
-.map-toolbar{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;padding:4px 6px 12px}
-.map-toolbar h2{font-size:15px;color:var(--accent)}
-.legend{display:flex;gap:14px;font-size:12px;color:var(--muted)}
-.dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-left:4px;vertical-align:middle}
-.dot.node{background:var(--node)}
-.dot.leak{background:var(--leak)}
-.dot.rsv{background:var(--accent)}
-.map-wrap{background:#0a1020;border-radius:12px;border:1px solid var(--line);overflow:hidden}
-svg{width:100%;height:auto;display:block}
+.net-title span{font-size:17px;font-weight:bold;color:var(--accent)}
+.net-title small{display:block;font-size:11px;color:var(--muted);margin-top:2px}
+.net-btns{display:flex;gap:8px}
+.tbtn{
+  border:1px solid var(--line);background:rgba(19,28,46,.9);color:var(--txt);
+  padding:8px 14px;border-radius:10px;cursor:pointer;font-size:12px;font-family:inherit;transition:.2s;
+}
+.tbtn:hover{border-color:var(--accent)}
+.tbtn.active{border-color:var(--zone);color:var(--zone)}
 
-.panel{display:flex;flex-direction:column;gap:14px}
-.card{padding:16px}
-.card h3{font-size:14px;color:var(--accent);margin-bottom:8px}
+.net-canvas{flex:1;display:flex;align-items:center;justify-content:center;padding:0 20px 20px;min-height:0}
+#netmap{
+  height:100%;max-height:calc(100vh - 130px);width:auto;max-width:min(58vw,760px);
+  background:rgba(10,16,32,.82);border:1px solid var(--line);border-radius:16px;
+  box-shadow:0 10px 40px #000a;
+}
+
+/* ---------- پنل سمت چپ ---------- */
+.panel{
+  position:fixed;top:96px;left:14px;bottom:14px;width:360px;z-index:1100;
+  display:flex;flex-direction:column;gap:12px;overflow-y:auto;padding-left:2px;
+  transition:transform .5s ease, opacity .5s ease;
+}
+.panel.hidden{transform:translateX(-110%);opacity:0;pointer-events:none}
+.panel::-webkit-scrollbar{width:5px}
+.panel::-webkit-scrollbar-thumb{background:var(--line);border-radius:3px}
+.card{
+  background:linear-gradient(180deg,rgba(19,28,46,.95),rgba(24,34,58,.95));
+  border:1px solid var(--line);border-radius:16px;box-shadow:0 8px 30px #0007;
+  padding:14px;backdrop-filter:blur(10px);
+}
+.card h3{font-size:13px;color:var(--accent);margin-bottom:8px}
 .hint{font-size:11px;color:var(--muted);margin-bottom:10px;line-height:1.7}
 .hint code{background:#0d1526;padding:1px 6px;border-radius:5px;color:var(--accent)}
 
@@ -55,52 +91,48 @@ svg{width:100%;height:auto;display:block}
   padding:9px 14px;border-radius:10px;cursor:pointer;font-size:13px;
   transition:.2s;font-family:inherit;
 }
-.btn:hover{border-color:var(--accent);transform:translateY(-1px)}
+.btn:hover{border-color:var(--accent)}
 .btn.primary{
-  width:100%;margin-top:10px;padding:12px;font-size:14px;font-weight:bold;
+  width:100%;margin-top:10px;padding:11px;font-size:13px;font-weight:bold;
   background:linear-gradient(135deg,var(--accent),var(--accent2));
-  border:none;color:#283643;
+  border:none;color:#04121f;
 }
 .btn.primary:hover:not(:disabled){filter:brightness(1.15)}
-.btn.primary:disabled{opacity:.4;cursor:not-allowed;transform:none}
-.file{width:100%;font-size:12px;color:var(--muted);margin-bottom:4px}
+.btn.primary:disabled{opacity:.4;cursor:not-allowed}
+.file{width:100%;font-size:11px;color:var(--muted);margin-bottom:2px}
 .upload-info{
-  margin-top:8px;font-size:11px;color:var(--ok);
-  background:#22c55e14;border:1px solid #22c55e44;border-radius:8px;padding:7px 10px;
+  margin-top:8px;font-size:10px;color:var(--ok);
+  background:#22c55e14;border:1px solid #22c55e44;border-radius:8px;padding:6px 9px;line-height:1.6;
 }
 
-.sensors{
-  display:grid;grid-template-columns:repeat(4,1fr);gap:6px;
-  max-height:280px;overflow:auto;padding-left:4px;margin-bottom:4px;
-}
-.sensors::-webkit-scrollbar{width:6px}
+.sensors{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;max-height:230px;overflow:auto;padding-left:3px}
+.sensors::-webkit-scrollbar{width:5px}
 .sensors::-webkit-scrollbar-thumb{background:var(--line);border-radius:3px}
 .sensor{display:flex;flex-direction:column;gap:2px}
-.sensor label{font-size:10px;color:var(--muted);text-align:center}
+.sensor label{font-size:9px;color:var(--muted);text-align:center}
 .sensor input{
-  width:100%;padding:6px 4px;border-radius:8px;border:1px solid var(--line);
-  background:#0d1526;color:var(--txt);font-size:12px;text-align:center;
+  width:100%;padding:5px 3px;border-radius:7px;border:1px solid var(--line);
+  background:#0d1526;color:var(--txt);font-size:11px;text-align:center;
 }
 .sensor input:focus{border-color:var(--accent);outline:none}
-.sensor input.filled{border-color:#22c55e66;background:#0f1a26}
+.sensor input.filled{border-color:#22c55e66}
 
-.results .kv{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
-.kv .item{background:#0d1526;border:1px solid var(--line);border-radius:10px;padding:10px;text-align:center}
-.kv .item b{display:block;font-size:18px;color:var(--accent);margin-top:4px}
-.kv .item span{font-size:11px;color:var(--muted)}
+.results .kv{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:10px}
+.kv .item{background:#0d1526;border:1px solid var(--line);border-radius:9px;padding:8px;text-align:center}
+.kv .item b{display:block;font-size:16px;color:var(--accent);margin-top:3px}
+.kv .item span{font-size:10px;color:var(--muted)}
 .kv .item.leakval b{color:var(--leak)}
 .pipe-hit{
   background:#ef444418;border:1px solid #ef444466;color:#fca5a5;
-  border-radius:10px;padding:8px 10px;font-size:12px;margin-bottom:10px;text-align:center;
+  border-radius:9px;padding:7px 9px;font-size:11px;margin-bottom:9px;text-align:center;line-height:1.7;
 }
 .accuracy{
-  background:#22c55e14;border:1px solid #22c55e44;color:#86efac;
-  border-radius:10px;padding:8px 10px;font-size:11px;margin-top:10px;line-height:1.8;
+  background:#22c55e12;border:1px solid #22c55e44;color:#86efac;
+  border-radius:9px;padding:7px 9px;font-size:10px;line-height:1.9;
 }
 .accuracy b{color:#4ade80}
-.foot{text-align:center;color:var(--muted);font-size:11px;padding:16px}
 
-/* --- نقشه --- */
+/* ---------- نقشه شبکه (SVG) ---------- */
 .pipe-line{stroke:var(--pipe);stroke-width:5;stroke-linecap:round;transition:.3s}
 .pipe-line.leaking{stroke:var(--leak);stroke-width:8;filter:drop-shadow(0 0 6px var(--leak))}
 .pipe-label{fill:#5c6f96;font-size:13px;font-style:italic;pointer-events:none}
@@ -114,3 +146,8 @@ svg{width:100%;height:auto;display:block}
 @keyframes pulse{0%{r:8;opacity:1}100%{r:30;opacity:0}}
 .rsv-box{fill:none;stroke:var(--accent);stroke-width:2}
 .rsv-label{fill:var(--accent);font-size:14px;font-weight:bold}
+
+@media(max-width:900px){
+  .panel{width:300px}
+  #netmap{max-width:96vw}
+}
